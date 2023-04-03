@@ -2,14 +2,20 @@
 
 namespace App\Jobs;
 
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Redis;
 use SergiX44\Nutgram\Nutgram;
 use SergiX44\Nutgram\Telegram\Attributes\ParseMode;
 
+
 class ScanOffersJob extends Job
 {
     private Nutgram $telegram;
+
+    const IMAGES_LIMIT = 4;
+    const BASE_IMAGE_WIDTH = 400;
+    const BASE_IMAGE_HEIGHT = 400;
 
     /**
      * Create a new job instance.
@@ -36,26 +42,38 @@ class ScanOffersJob extends Job
             ]);
         }
 
-        $newOffers = [];
         foreach ($response['data'] as $offer) {
             if(!Redis::sismember('offers', $offer['id'])) {
+                // Add offer_id to redis
                 Redis::sadd('offers', $offer['id']);
-                $newOffers[] = $offer;
+
+                $message = "<a href='{$offer['url']}'>{$offer['title']}</a> | {$this->getValueByKey($offer, 'price')} \n";
+                $message .= "<strong>Планування:</strong> {$this->getValueByKey($offer, 'layout')} \n";
+                $message .= "<strong>Опалення:</strong> {$this->getValueByKey($offer, 'heating')} \n";
+                $message .= "<strong>Ремонт:</strong> {$this->getValueByKey($offer, 'repair')} \n";
+                $message .= "<strong>Побутова техніка:</strong> {$this->getValueByKey($offer, 'appliances_2')} \n";
+                $message .= "<strong>Контакти:</strong> {$offer['contact']['name']} \n";
+                $message .= "<strong>Створено|Оновлено:</strong> {$this->formatDateString($offer['created_time'])} | {$this->formatDateString($offer['last_refresh_time'])}";
+
+                // Get images from offer
+                $images = array_slice($this->parseImages($offer), 0, self::IMAGES_LIMIT);
+
+                if(count($images)) {
+                    // Add a caption to first image in the group
+                    $this->addCaptionToImage($images, $message);
+
+                    $this->telegram->sendMediaGroup($images, [
+                        'chat_id' => env('TELEGRAM_CHAT_ID'),
+                        'parse_mode' => ParseMode::HTML,
+                    ]);
+                } else {
+                    $this->telegram->sendMessage($message, [
+                        'chat_id' => env('TELEGRAM_CHAT_ID'),
+                        'parse_mode' => ParseMode::HTML,
+                        'disable_web_page_preview' => true,
+                    ]);
+                }
             }
-        }
-
-        if(count($newOffers) >= 1) {
-            $message = "✅ Знайдено нові оголошення [" . count($newOffers) . "]\n";
-
-            for ($i = 0; $i < count($newOffers); $i++) {
-                $message .= ($i + 1) . ". <a href='" . $newOffers[$i]['url'] . "'>" . $newOffers[$i]['title'] . "</a> | " .  $this->getOfferPrice($newOffers[$i]) . "\n";
-            }
-
-            $this->telegram->sendMessage($message, [
-                'chat_id' => env('TELEGRAM_CHAT_ID'),
-                'parse_mode' => ParseMode::HTML,
-                'disable_web_page_preview' => true,
-            ]);
         }
     }
 
@@ -63,9 +81,48 @@ class ScanOffersJob extends Job
      * @param array $offer
      * @return mixed
      */
-    private function getOfferPrice(array $offer)
+    private function getValueByKey(array $offer, string $key): string
     {
-        $priceIndex = array_search('price', array_column($offer['params'], 'key'));
-        return $offer['params'][$priceIndex]['value']['label'];
+        $priceIndex = array_search($key, array_column($offer['params'], 'key'));
+        return $priceIndex ? $offer['params'][$priceIndex]['value']['label'] : '-';
+    }
+
+    /**
+     * @param string $dateString
+     * @return string
+     */
+    private function formatDateString(string $dateString): string
+    {
+        return Carbon::parse($dateString)->format('d.m.y G:i');
+    }
+
+    /**
+     * @param array $offer
+     * @return array
+     */
+    private function parseImages(array $offer): array
+    {
+        return array_map(function ($image) {
+            return [
+                'type'  => 'photo',
+                'media' =>  str_replace(['{height}', '{width}'], [self::BASE_IMAGE_HEIGHT, self::BASE_IMAGE_WIDTH], $image['link']),
+            ];
+        }, $offer['photos']);
+    }
+
+    /**
+     * @param array $images
+     * @param string $message
+     * @return void
+     */
+    private function addCaptionToImage(array &$images, string $message)
+    {
+        $firstImage = array_shift($images);
+
+        // Add a caption to first image
+        $firstImage['caption'] = $message;
+        $firstImage['parse_mode'] = ParseMode::HTML;
+
+        $images = [$firstImage, ...$images ?? []];
     }
 }
