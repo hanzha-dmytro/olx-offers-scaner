@@ -8,7 +8,6 @@ use Illuminate\Support\Facades\Redis;
 use SergiX44\Nutgram\Nutgram;
 use SergiX44\Nutgram\Telegram\Attributes\ParseMode;
 
-
 class ScanOffersJob extends Job
 {
     private Nutgram $telegram;
@@ -44,7 +43,7 @@ class ScanOffersJob extends Job
 
         foreach ($response['data'] as $offer) {
             if(!Redis::sismember('offers', $offer['id'])) {
-                // Add offer_id to redis
+                // Add offer_id to offers
                 Redis::sadd('offers', $offer['id']);
 
                 $message = "<a href='{$offer['url']}'>{$offer['title']}</a> | {$this->getValueByKey($offer, 'price')} \n";
@@ -83,8 +82,8 @@ class ScanOffersJob extends Job
      */
     private function getValueByKey(array $offer, string $key): string
     {
-        $priceIndex = array_search($key, array_column($offer['params'], 'key'));
-        return $priceIndex ? $offer['params'][$priceIndex]['value']['label'] : '-';
+        $paramIndex = array_search($key, array_column($offer['params'], 'key'));
+        return $paramIndex !== false ? $offer['params'][$paramIndex]['value']['label'] : '-';
     }
 
     /**
