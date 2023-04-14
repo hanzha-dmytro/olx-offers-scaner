@@ -49,6 +49,8 @@ class ScanOffersJob extends Job
                 Redis::sadd('offers', $hash);
 
                 $message = "<a href='{$offer['url']}'>{$offer['title']}</a> | {$this->getValueByKey($offer, 'price')} \n";
+                $message .= "<strong>Кількість кімнат:</strong> {$this->getValueByKey($offer, 'number_of_rooms_string')} \n";
+                $message .= "<strong>Загальна площа:</strong> {$this->getValueByKey($offer, 'total_area')} \n";
                 $message .= "<strong>Планування:</strong> {$this->getValueByKey($offer, 'layout')} \n";
                 $message .= "<strong>Опалення:</strong> {$this->getValueByKey($offer, 'heating')} \n";
                 $message .= "<strong>Ремонт:</strong> {$this->getValueByKey($offer, 'repair')} \n";
