@@ -42,9 +42,11 @@ class ScanOffersJob extends Job
         }
 
         foreach ($response['data'] as $offer) {
-            if(!Redis::sismember('offers', $offer['id'])) {
+            $hash = md5("{$offer['id']}:{$offer['title']}");
+
+            if(!Redis::sismember('offers', $hash)) {
                 // Add offer_id to offers
-                Redis::sadd('offers', $offer['id']);
+                Redis::sadd('offers', $hash);
 
                 $message = "<a href='{$offer['url']}'>{$offer['title']}</a> | {$this->getValueByKey($offer, 'price')} \n";
                 $message .= "<strong>Планування:</strong> {$this->getValueByKey($offer, 'layout')} \n";
