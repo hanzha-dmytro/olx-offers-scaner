@@ -18,8 +18,6 @@ services:
     app:
         build:
             context: ./php-fpm
-            args:
-                - NODE_VERSION=${NODE_VERSION}
             dockerfile: ./Dockerfile
         container_name: ${COMPOSE_PROJECT_NAME}-app
         restart: unless-stopped
