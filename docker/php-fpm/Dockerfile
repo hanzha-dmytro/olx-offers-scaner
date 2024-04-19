@@ -29,6 +29,8 @@ RUN apt-get update && apt-get install -y \
 
 # Install PYTHON3
 RUN apt-get -y install python3 python3-dev build-essential  \
+  && cd /usr/lib/python3.11  \
+  && rm -f EXTERNALLY-MANAGED  \
   && curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py  \
   && python3 get-pip.py  \
   && rm get-pip.py  \
