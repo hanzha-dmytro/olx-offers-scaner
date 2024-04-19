@@ -1,7 +1,7 @@
 FROM php:8.1-fpm
 
 # Create system user to run Composer and Artisan Commands
-RUN useradd -G www-data,root -u 1000 -d /home/laravel laravel
+RUN useradd -G www-data,root -u 1001 -d /home/laravel laravel
 RUN mkdir -p /home/laravel/.composer && \
     chown -R laravel:laravel /home/laravel
 
