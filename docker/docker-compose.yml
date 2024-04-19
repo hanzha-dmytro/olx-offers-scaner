@@ -1,19 +1,6 @@
 version: "3.3"
 
 services:
-    # NGINX CONTAINER
-    nginx:
-        image: nginx:stable-alpine
-        container_name: ${COMPOSE_PROJECT_NAME}-nginx
-        restart: unless-stopped
-        ports:
-            - ${NGINX_PORT}:80
-        volumes:
-            - ../:/var/www
-            - ./nginx/conf.d:/etc/nginx/conf.d
-        networks:
-            - app-network
-
     # FPM CONTAINER
     app:
         build:
