@@ -48,6 +48,8 @@ $app->singleton(
     App\Console\Kernel::class
 );
 
+$app->register(App\Providers\AppServiceProvider::class);
+
 /*
 |--------------------------------------------------------------------------
 | Register Config Files
