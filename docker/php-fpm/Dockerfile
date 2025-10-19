@@ -30,15 +30,22 @@ RUN apt-get update && apt-get install -y \
     libmemcached-dev
 
 # Install PYTHON3
-RUN apt-get -y install python3 python3-dev build-essential  \
-  && cd /usr/lib/python3.11  \
-  && rm -f EXTERNALLY-MANAGED  \
-  && curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py  \
-  && python3 get-pip.py  \
-  && rm get-pip.py  \
-  && python3 -m pip install --upgrade --force-reinstall pip  \
-  && python3 -m pip install --upgrade virtualenv \
-  && pip install supervisor
+RUN apt-get update && apt-get install -y \
+    python3 \
+    python3-dev \
+    python3-venv \
+    build-essential \
+    curl \
+    ca-certificates \
+ && PYTHON_PATH=$(python3 -c "import sys; print(sys.prefix)") \
+ && EXTERNALLY_MANAGED=$(find $PYTHON_PATH -name EXTERNALLY-MANAGED 2>/dev/null | head -n 1) \
+ && [ -z "$EXTERNALLY_MANAGED" ] || rm -f "$EXTERNALLY_MANAGED" \
+ && curl -sS https://bootstrap.pypa.io/get-pip.py -o get-pip.py \
+ && python3 get-pip.py \
+ && rm get-pip.py \
+ && python3 -m pip install --no-cache-dir --upgrade pip virtualenv supervisor \
+ && apt-get clean \
+ && rm -rf /var/lib/apt/lists/*
 
 # Install SUPERVISOR:
 RUN python3 -m pip install --upgrade supervisor
