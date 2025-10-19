@@ -2,7 +2,7 @@
 
 namespace App\Contracts;
 
-interface OlxParser
+interface OlxParserInterface
 {
     /**
      * Parse offers

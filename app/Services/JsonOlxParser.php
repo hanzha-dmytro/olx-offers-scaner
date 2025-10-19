@@ -2,11 +2,11 @@
 
 namespace App\Services;
 
-use App\Contracts\OlxParser;
+use App\Contracts\OlxParserInterface;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Http;
 
-class JsonParser implements OlxParser
+class JsonOlxParser implements OlxParserInterface
 {
     const BASE_IMAGE_WIDTH = 400;
     const BASE_IMAGE_HEIGHT = 400;

@@ -2,7 +2,7 @@
 
 namespace App\Jobs;
 
-use App\Contracts\OlxParser;
+use App\Contracts\OlxParserInterface;
 use Illuminate\Support\Facades\Redis;
 use SergiX44\Nutgram\Nutgram;
 use SergiX44\Nutgram\Telegram\Attributes\ParseMode;
@@ -28,7 +28,7 @@ class ScanOffersJob extends Job
      *
      * @return void
      */
-    public function handle(OlxParser $olxParser)
+    public function handle(OlxParserInterface $olxParser)
     {
 
         $offers = $olxParser->parseOffers(env('OLX_API_SCAN_URL'));

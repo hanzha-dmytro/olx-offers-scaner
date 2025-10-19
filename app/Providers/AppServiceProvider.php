@@ -2,8 +2,8 @@
 
 namespace App\Providers;
 
-use App\Contracts\OlxParser;
-use App\Services\JsonParser;
+use App\Contracts\OlxParserInterface;
+use App\Services\JsonOlxParser;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -15,6 +15,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        $this->app->singleton(OlxParser::class, JsonParser::class);
+        $this->app->singleton(OlxParserInterface::class, JsonOlxParser::class);
     }
 }
